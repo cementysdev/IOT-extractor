@@ -44,7 +44,7 @@ def extract_data(result_list, debut_input, fin_input):
         fin_input : The ending date.
     
     Returns:
-        outputFolder : The path to the output folder containing the raw data files.
+        result : The list of dataframes containing the raw data.
     """
     
     logs_file_name = "ErrorLogs_ReadDataSensorIoT.txt"
@@ -80,6 +80,40 @@ def extract_data(result_list, debut_input, fin_input):
             file.write(f"{datetime.datetime.today().strftime('%Y-%m-%d %H:%M:%S')}, {DevEUIs}, {str(e)}\n")
     
     print("\n> Data extraction done")
-    
+
+def filter_excel_rows(
+    file_path: str,
+    sheet_name: str,
+    column_name: str,
+    condition_func
+) -> pd.DataFrame:
+    """
+    Load an Excel file, select a sheet and filter rows where condition_func(column_value) returns True.
+
+    Args:
+        file_path (str): Path to the Excel file.
+        sheet_name (str): Sheet name to read.
+        column_name (str): Column to apply the condition on.
+        condition_func (function): A function that takes a single value and returns True or False.
+
+    Returns:
+        pd.DataFrame: Filtered DataFrame containing only rows where condition is met.
+    """
+    try:
+        df = pd.read_excel(file_path, sheet_name=sheet_name, skiprows=2)
+    except Exception as e:
+        print(f"Error loading file: {e}")
+        return pd.DataFrame()
+
+    if column_name not in df.columns:
+        print(f"Column '{column_name}' not found in the sheet.")
+        return pd.DataFrame()
+
+    try:
+        filtered_df = df[df[column_name].apply(condition_func)]
+        return filtered_df
+    except Exception as e:
+        print(f"Error during filtering: {e}")
+        return pd.DataFrame()
     
     
